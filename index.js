@@ -284,9 +284,9 @@ app.get("/api/raffles", async (req, res) => {
 //  RUTAS - WEBHOOKS DISCORD (evita CORS)
 // ══════════════════════════════════════════════
 
-const WH_PEDIDOS = "https://discord.com/api/webhooks/1513699759091748965/61VpKrhB6Aa6KWG3BjOIq7EpoPRgyfghORKu8ovSuM3pPXlPSY_gFQAjwiULW5Pub4RM";
-const WH_COMPRAS = "https://discord.com/api/webhooks/1513699903879249951/z533Ic5enIUpBBMQDr1G-uMkduLOs9XYT37mqN2e2v03n1kRa96VXmMsAEtYiN0-D_jM";
-const WH_RECIBOS = "https://discord.com/api/webhooks/1513699997390995678/pSlBEyBORe5-JWEr4OyO9IJigDy11PPMJXyucdnu8HENszXuNB3NWZnj1Gf6ANgIqNag";
+const WH_PEDIDOS = "https://discord.com/api/webhooks/1515541381790302249/aA6LnbgKVsynUoe0HDZU71PGGGoVT6YEph9uy1kbrCZrCKkgsBkcRsKnThYEqP1Oj1mI";
+const WH_COMPRAS = "https://discord.com/api/webhooks/1515541481270542427/7b9pD0N6jup_MySF0Ju394Eu5YwfpbdQzXSgOiXag498JM8LxFjVl31l0ItrT4ROKqrO";
+const WH_RECIBOS = "https://discord.com/api/webhooks/1515541589555019797/I4aTt8rFU9ct252dz8zhNJ7dtAhXjEYU6mowNrtuC89P41SYaZuRKbKpG8MicewpKLhW";
 
 async function sendWebhook(url, payload) {
   try {
