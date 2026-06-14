@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3000;
 const DISCORD_CLIENT_ID     = process.env.DISCORD_CLIENT_ID     || "1513696573454811317";
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET || "sSHskDrBkLA64Bzv9speBkwZ_YSrThX3";
 const FRONTEND_URL          = process.env.FRONTEND_URL          || "https://fuzhipin.netlify.app";
-const REDIRECT_URI          = process.env.REDIRECT_URI          || "https://fuzhipin-backend.up.railway.app/auth/discord/callback";
+const REDIRECT_URI          = process.env.REDIRECT_URI          || "https://fuzhipin-backend-production.up.railway.app/auth/discord/callback";
 
 const SB_URL = process.env.SUPABASE_URL || "https://sbmljisoaohxtzltnidb.supabase.co";
 const SB_KEY = process.env.SUPABASE_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNibWxqaXNvYW9oeHR6bHRuaWRiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5NTkxNDUsImV4cCI6MjA5NjUzNTE0NX0.xTFj-fdUkdF1GoHLXs_ZvNFvkGTahTA5KcLinItGKic";
