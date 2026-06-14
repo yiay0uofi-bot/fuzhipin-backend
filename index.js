@@ -280,6 +280,164 @@ app.get("/api/raffles", async (req, res) => {
   res.json(raffles);
 });
 
+// ══════════════════════════════════════════════
+//  RUTAS — WEBHOOKS DISCORD (evita CORS)
+// ══════════════════════════════════════════════
+
+const WH_PEDIDOS = "https://discord.com/api/webhooks/1513699759091748965/61VpKrhB6Aa6KWG3BjOIq7EpoPRgyfghORKu8ovSuM3pPXlPSY_gFQAjwiULW5Pub4RM";
+const WH_COMPRAS = "https://discord.com/api/webhooks/1513699903879249951/z533Ic5enIUpBBMQDr1G-uMkduLOs9XYT37mqN2e2v03n1kRa96VXmMsAEtYiN0-D_jM";
+const WH_RECIBOS = "https://discord.com/api/webhooks/1513699997390995678/pSlBEyBORe5-JWEr4OyO9IJigDy11PPMJXyucdnu8HENszXuNB3NWZnj1Gf6ANgIqNag";
+
+async function sendWebhook(url, payload) {
+  try {
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return r.ok;
+  } catch (e) {
+    console.error("Webhook error:", e);
+    return false;
+  }
+}
+
+// Notificar pedido a los 3 canales
+app.post("/api/notify-order", async (req, res) => {
+  const order = req.body;
+  const results = { pedidos: false, compras: false, recibos: false };
+
+  const embed = {
+    title: `🛒 Nuevo Pedido ${order.id}`,
+    color: 0x1a6cf5,
+    fields: [
+      { name: "👤 Cliente", value: order.user_discord || "—", inline: true },
+      { name: "💰 Total", value: `$${order.total} MXN`, inline: true },
+      { name: "💳 Método", value: order.payment_method || "—", inline: true },
+      { name: "📦 Productos", value: (order.items || []).map(i => `• ${i.name} x${i.qty} — $${i.price}`).join("
+") || "—", inline: false },
+    ],
+    timestamp: new Date().toISOString(),
+    footer: { text: "FUZHIPIN INC — Sistema de Pedidos" },
+  };
+  if (order.discount_code) {
+    embed.fields.push({ name: "🎟 Descuento", value: `${order.discount_code} (−$${order.discount_amount})`, inline: true });
+  }
+
+  results.pedidos = await sendWebhook(WH_PEDIDOS, { username: "Fuzhipin Pedidos", embeds: [embed] });
+  results.compras = await sendWebhook(WH_COMPRAS, { username: "Fuzhipin Compras", content: `**Nueva compra** — ${order.id} — $${order.total} MXN — ${order.user_discord || "cliente"}` });
+  results.recibos = await sendWebhook(WH_RECIBOS, {
+    username: "Fuzhipin Recibos",
+    embeds: [{
+      title: `🧾 Recibo — ${order.id}`,
+      color: 0x00d4a0,
+      description: `**Cliente:** ${order.user_discord || "—"}
+**Método:** ${order.payment_method}
+**Fecha:** ${new Date().toLocaleString("es-MX")}`,
+      fields: [
+        { name: "Subtotal", value: `$${order.subtotal} MXN`, inline: true },
+        { name: "Descuento", value: `−$${order.discount_amount || 0} MXN`, inline: true },
+        { name: "TOTAL", value: `**$${order.total} MXN**`, inline: true },
+      ],
+      footer: { text: "Guarda este recibo para cualquier reclamación." }
+    }]
+  });
+
+  res.json(results);
+});
+
+// ══════════════════════════════════════════════
+//  RUTAS — TICKETS
+// ══════════════════════════════════════════════
+
+app.post("/api/tickets", async (req, res) => {
+  const { subject, category, priority, description, user_discord } = req.body;
+  if (!subject) return res.json({ success: false, error: "Asunto requerido" });
+
+  const id = "#TKT-" + Math.floor(1000 + Math.random() * 9000);
+  try {
+    await sbPost("fzp_tickets", {
+      id, subject, category, priority: priority?.toLowerCase() || "normal",
+      description, status: "open",
+      user_discord: user_discord || (req.session.user?.tag) || "Anónimo",
+    });
+
+    // Notificar en Discord
+    await sendWebhook(WH_PEDIDOS, {
+      username: "Fuzhipin Soporte",
+      embeds: [{
+        title: `🎫 Nuevo Ticket ${id}`,
+        color: 0xf5c518,
+        fields: [
+          { name: "Asunto", value: subject, inline: false },
+          { name: "Categoría", value: category || "—", inline: true },
+          { name: "Prioridad", value: priority || "Normal", inline: true },
+          { name: "Usuario", value: user_discord || "—", inline: true },
+        ],
+        timestamp: new Date().toISOString(),
+      }]
+    });
+
+    res.json({ success: true, id });
+  } catch (e) {
+    console.error("Ticket error:", e);
+    res.json({ success: false, error: e.message });
+  }
+});
+
+// Obtener tickets del usuario
+app.get("/api/tickets/me", async (req, res) => {
+  const user = req.session.user?.tag || req.query.discord;
+  if (!user) return res.json([]);
+  const tickets = await sbGet("fzp_tickets", `user_discord=eq.${encodeURIComponent(user)}&order=created_at.desc&limit=10`);
+  res.json(tickets);
+});
+
+// ══════════════════════════════════════════════
+//  RUTAS — POSTULACIONES
+// ══════════════════════════════════════════════
+
+app.post("/api/applications", async (req, res) => {
+  const { discord, roblox, position, experience, motivation, skills, extra } = req.body;
+  if (!discord) return res.json({ success: false, error: "Discord requerido" });
+
+  try {
+    await sbPost("fzp_applications", {
+      discord, roblox: roblox || null, position, experience,
+      motivation, skills: skills || [], extra: extra || null, status: "pending",
+    });
+
+    // Notificar en Discord
+    await sendWebhook(WH_PEDIDOS, {
+      username: "Fuzhipin HR",
+      content: `📝 **Nueva postulación** de **${discord}** para **${position}**. Revisa el panel admin.`,
+    });
+
+    res.json({ success: true });
+  } catch (e) {
+    console.error("Application error:", e);
+    res.json({ success: false, error: e.message });
+  }
+});
+
+// ══════════════════════════════════════════════
+//  RUTAS — CALIFICACIONES
+// ══════════════════════════════════════════════
+
+app.post("/api/reviews", async (req, res) => {
+  const { rating, comment } = req.body;
+  if (!rating) return res.json({ success: false, error: "Rating requerido" });
+  try {
+    await sbPost("fzp_reviews", {
+      user_discord: req.session.user?.tag || "Anónimo",
+      rating, comment: comment || null,
+    });
+    res.json({ success: true });
+  } catch (e) {
+    res.json({ success: false, error: e.message });
+  }
+});
+
 // Health check
 app.get("/", (req, res) => {
   res.json({
