@@ -1,6 +1,6 @@
 /**
  * ╔══════════════════════════════════════════════════════════╗
- * ║   FUZHIPIN INC — Backend OAuth                          ║
+ * ║   FUZHIPIN INC - Backend OAuth                          ║
  * ║   Discord OAuth2 + Roblox Verify + Supabase             ║
  * ╚══════════════════════════════════════════════════════════╝
  */
@@ -8,7 +8,7 @@
 const express = require("express");
 const cors = require("cors");
 const session = require("express-session");
-// Node 18+ tiene fetch nativo — no necesita node-fetch
+// Node 18+ tiene fetch nativo - no necesita node-fetch
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -73,7 +73,7 @@ async function sbPatch(table, qs, data) {
 }
 
 // ══════════════════════════════════════════════
-//  RUTAS — DISCORD OAUTH
+//  RUTAS - DISCORD OAUTH
 // ══════════════════════════════════════════════
 
 // 1. Redirigir al login de Discord
@@ -87,7 +87,7 @@ app.get("/auth/discord", (req, res) => {
   res.redirect(`https://discord.com/oauth2/authorize?${params}`);
 });
 
-// 2. Callback de Discord — recibe el código y obtiene el token
+// 2. Callback de Discord - recibe el código y obtiene el token
 app.get("/auth/discord/callback", async (req, res) => {
   const { code } = req.query;
   if (!code) return res.redirect(`${FRONTEND_URL}?error=no_code`);
@@ -175,7 +175,7 @@ app.get("/auth/logout", (req, res) => {
 });
 
 // ══════════════════════════════════════════════
-//  RUTAS — ROBLOX VERIFY
+//  RUTAS - ROBLOX VERIFY
 // ══════════════════════════════════════════════
 
 // Verificar que un usuario de Roblox existe de verdad
@@ -227,7 +227,7 @@ app.post("/auth/roblox/verify", async (req, res) => {
 });
 
 // ══════════════════════════════════════════════
-//  RUTAS — API FUZHIPIN
+//  RUTAS - API FUZHIPIN
 // ══════════════════════════════════════════════
 
 // Productos
@@ -281,7 +281,7 @@ app.get("/api/raffles", async (req, res) => {
 });
 
 // ══════════════════════════════════════════════
-//  RUTAS — WEBHOOKS DISCORD (evita CORS)
+//  RUTAS - WEBHOOKS DISCORD (evita CORS)
 // ══════════════════════════════════════════════
 
 const WH_PEDIDOS = "https://discord.com/api/webhooks/1513699759091748965/61VpKrhB6Aa6KWG3BjOIq7EpoPRgyfghORKu8ovSuM3pPXlPSY_gFQAjwiULW5Pub4RM";
@@ -311,27 +311,26 @@ app.post("/api/notify-order", async (req, res) => {
     title: `🛒 Nuevo Pedido ${order.id}`,
     color: 0x1a6cf5,
     fields: [
-      { name: "👤 Cliente", value: order.user_discord || "—", inline: true },
+      { name: "👤 Cliente", value: order.user_discord || "-", inline: true },
       { name: "💰 Total", value: `$${order.total} MXN`, inline: true },
-      { name: "💳 Método", value: order.payment_method || "—", inline: true },
-      { name: "📦 Productos", value: (order.items || []).map(i => `• ${i.name} x${i.qty} — $${i.price}`).join("
-") || "—", inline: false },
+      { name: "💳 Método", value: order.payment_method || "-", inline: true },
+      { name: "📦 Productos", value: (order.items || []).map(i => `* ${i.name} x${i.qty} - $${i.price}`).join(", ") || "-", inline: false },
     ],
     timestamp: new Date().toISOString(),
-    footer: { text: "FUZHIPIN INC — Sistema de Pedidos" },
+    footer: { text: "FUZHIPIN INC - Sistema de Pedidos" },
   };
   if (order.discount_code) {
     embed.fields.push({ name: "🎟 Descuento", value: `${order.discount_code} (−$${order.discount_amount})`, inline: true });
   }
 
   results.pedidos = await sendWebhook(WH_PEDIDOS, { username: "Fuzhipin Pedidos", embeds: [embed] });
-  results.compras = await sendWebhook(WH_COMPRAS, { username: "Fuzhipin Compras", content: `**Nueva compra** — ${order.id} — $${order.total} MXN — ${order.user_discord || "cliente"}` });
+  results.compras = await sendWebhook(WH_COMPRAS, { username: "Fuzhipin Compras", content: `**Nueva compra** - ${order.id} - $${order.total} MXN - ${order.user_discord || "cliente"}` });
   results.recibos = await sendWebhook(WH_RECIBOS, {
     username: "Fuzhipin Recibos",
     embeds: [{
-      title: `🧾 Recibo — ${order.id}`,
+      title: `🧾 Recibo - ${order.id}`,
       color: 0x00d4a0,
-      description: `**Cliente:** ${order.user_discord || "—"}
+      description: `**Cliente:** ${order.user_discord || "-"}
 **Método:** ${order.payment_method}
 **Fecha:** ${new Date().toLocaleString("es-MX")}`,
       fields: [
@@ -347,7 +346,7 @@ app.post("/api/notify-order", async (req, res) => {
 });
 
 // ══════════════════════════════════════════════
-//  RUTAS — TICKETS
+//  RUTAS - TICKETS
 // ══════════════════════════════════════════════
 
 app.post("/api/tickets", async (req, res) => {
@@ -370,9 +369,9 @@ app.post("/api/tickets", async (req, res) => {
         color: 0xf5c518,
         fields: [
           { name: "Asunto", value: subject, inline: false },
-          { name: "Categoría", value: category || "—", inline: true },
+          { name: "Categoría", value: category || "-", inline: true },
           { name: "Prioridad", value: priority || "Normal", inline: true },
-          { name: "Usuario", value: user_discord || "—", inline: true },
+          { name: "Usuario", value: user_discord || "-", inline: true },
         ],
         timestamp: new Date().toISOString(),
       }]
@@ -394,7 +393,7 @@ app.get("/api/tickets/me", async (req, res) => {
 });
 
 // ══════════════════════════════════════════════
-//  RUTAS — POSTULACIONES
+//  RUTAS - POSTULACIONES
 // ══════════════════════════════════════════════
 
 app.post("/api/applications", async (req, res) => {
@@ -421,7 +420,7 @@ app.post("/api/applications", async (req, res) => {
 });
 
 // ══════════════════════════════════════════════
-//  RUTAS — CALIFICACIONES
+//  RUTAS - CALIFICACIONES
 // ══════════════════════════════════════════════
 
 app.post("/api/reviews", async (req, res) => {
