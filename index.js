@@ -7,8 +7,8 @@
 
 const express = require("express");
 const cors = require("cors");
-const fetch = require("node-fetch");
 const session = require("express-session");
+// Node 18+ tiene fetch nativo — no necesita node-fetch
 
 const app = express();
 const PORT = process.env.PORT || 3000;
